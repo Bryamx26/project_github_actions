@@ -22,7 +22,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          IMAGE_NAME="flask_${DOCKER_USER_NAME}"
+          IMAGE_NAME="flask"
           docker build \
             -t bryamx26/$IMAGE_NAME:latest \
             -t bryamx26/$IMAGE_NAME:${GITHUB_SHA} \
