@@ -30,7 +30,7 @@ jobs:
 
       - name: Push Docker image
         run: |
-          IMAGE_NAME="flask_${DOCKER_USER_NAME}"
+          IMAGE_NAME="flask"
           docker push bryamx26/$IMAGE_NAME:latest
           docker push bryamx26/$IMAGE_NAME:${GITHUB_SHA}
         env:
