@@ -22,9 +22,10 @@ jobs:
 
       - name: Build Docker image
         run: |
+          IMAGE_NAME="flask_${DOCKER_USER_NAME}"
           docker build \
-            -t bryamx26/my-image-name:latest \
-            -t bryamx26/my-image-name:${{ github.sha }} \
+            -t bryamx26/$IMAGE_NAME:latest \
+            -t bryamx26/$IMAGE_NAME:${{ github.sha }} \
             .
 
       - name: Push Docker image
