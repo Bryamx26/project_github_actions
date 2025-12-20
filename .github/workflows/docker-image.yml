@@ -35,3 +35,16 @@ jobs:
           docker push bryamx26/$IMAGE_NAME:${GITHUB_SHA}
         env:
           DOCKER_USER_NAME: ${{ secrets.DOCKER_USER_NAME }}
+
+      - name: replace image tag in deployment file
+        run: |
+          IMAGE_NAME="flask"
+          sed -i "s|bryamx26/$IMAGE_NAME:latest|bryamx26/$IMAGE_NAME:${GITHUB_SHA}|g" deployment/deploy.yml    
+      - name : commit changes
+        run: |
+          git config --global user.name "bryamx26"
+          git config --global user.email "rishingsilvabryam@github.com"    
+          git add deployment/deploy.yml
+          git commit -m "Update image tag to ${GITHUB_SHA} in deployment file"
+          git push origin HEAD:main
+          

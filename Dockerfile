@@ -5,6 +5,6 @@ WORKDIR /
 COPY app.py .
 RUN pip install Flask
 
-ENTRYPOINT [ "python", "-m", "flask","run", "--host=0.0.0.0", "--port=5000" ]
+ENTRYPOINT [ "python", "-m", "flask","run", "--host=0.0.0.0", "--port=80" ]
 
 
