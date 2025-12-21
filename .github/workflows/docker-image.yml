@@ -62,12 +62,20 @@ jobs:
       - name: Replace image tag in deployment file
         run: |
           IMAGE_NAME="flask"
-          sed -i "s|bryamx26/$IMAGE_NAME:latest|bryamx26/$IMAGE_NAME:${GITHUB_SHA}|g" deployment/deploy.yml    
+          FILE="deployment/deploy.yml"
+          NEW_TAG="${GITHUB_SHA}"
+          # On ne modifie le fichier que si le tag est différent
+          if grep -q "bryamx26/$IMAGE_NAME:latest" "$FILE"; then
+            sed -i "s|bryamx26/$IMAGE_NAME:latest|bryamx26/$IMAGE_NAME:$NEW_TAG|g" "$FILE"
+            echo "Image tag updated."
+          else
+            echo "No update needed in $FILE."
+          fi
 
       - name: Commit changes if there are modifications
         run: |
           git config --global user.name "bryamx26"
-          git config --global user.email "rishingsilvabryam@github.com"    
+          git config --global user.email "rishingsilvabryam@github.com"
           git add deployment/deploy.yml
           if ! git diff --cached --quiet; then
             git commit -m "Update image tag to ${GITHUB_SHA} in deployment file"
