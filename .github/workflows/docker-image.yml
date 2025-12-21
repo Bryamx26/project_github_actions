@@ -15,6 +15,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
@@ -43,13 +46,14 @@ jobs:
           sed -i "s|bryamx26/$IMAGE_NAME:.*|bryamx26/$IMAGE_NAME:${GITHUB_SHA}|g" "$FILE"
           echo "Deployment file updated with new image tag."
 
-      - name: Commit changes if any
+      - name: Commit and push changes
         run: |
-          git config --global user.name "bryamx26"
-          git config --global user.email "rishingsilvabryam@github.com"
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add deployment/deploy.yml
           if ! git diff --cached --quiet; then
-            git commit -m "Update image tag to ${GITHUB_SHA} in deployment file"
+            git commit -m "Update image tag to ${GITHUB_SHA} in deployment file [skip ci]"
             git push origin HEAD:main
           else
             echo "No changes to commit"
+          fi
