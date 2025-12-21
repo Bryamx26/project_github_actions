@@ -4,7 +4,7 @@ app = Flask(__name__)
 
 @app.route("/")
 def hello_world():
-    return "<p>Hello, World! updated 3 dddddd </p>"
+    return "<p>Hello, World! updated 3  </p>"
 
 @app.route("/argocd")
 def argocd():
