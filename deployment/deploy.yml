@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: my-app-container
-        image: bryamx26/flask:3b3893285af48a7097de6a7e40cefd62ca28d922
+        image: bryamx26/flask:36e03386edb7b841914678856b975f74ffc16342
         ports:
         - containerPort: 80
         resources:
