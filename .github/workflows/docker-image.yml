@@ -5,47 +5,71 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+
 permissions:
   contents: write
 
 jobs:
-  build:
+  checkout:
     runs-on: ubuntu-latest
-
+    outputs:
+      sha: ${{ steps.get_sha.outputs.sha }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Get commit SHA
+        id: get_sha
+        run: echo "::set-output name=sha::${GITHUB_SHA}"
+
+  docker_login:
+    runs-on: ubuntu-latest
+    needs: checkout
+    steps:
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USER_NAME }}
           password: ${{ secrets.DOCKER_TOKEN }}
 
+  build_image:
+    runs-on: ubuntu-latest
+    needs: docker_login
+    steps:
       - name: Build Docker image
         run: |
           IMAGE_NAME="flask"
           docker build \
             -t bryamx26/$IMAGE_NAME:latest \
-            -t bryamx26/$IMAGE_NAME:${GITHUB_SHA} \
+            -t bryamx26/$IMAGE_NAME:${{ needs.checkout.outputs.sha }} \
             .
 
+  push_image:
+    runs-on: ubuntu-latest
+    needs: build_image
+    steps:
       - name: Push Docker image
         run: |
           IMAGE_NAME="flask"
           docker push bryamx26/$IMAGE_NAME:latest
-          docker push bryamx26/$IMAGE_NAME:${GITHUB_SHA}
-        env:
-          DOCKER_USER_NAME: ${{ secrets.DOCKER_USER_NAME }}
+          docker push bryamx26/$IMAGE_NAME:${{ needs.checkout.outputs.sha }}
 
-      - name: replace image tag in deployment file
+  update_deployment:
+    runs-on: ubuntu-latest
+    needs: push_image
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Replace image tag in deployment file
         run: |
           IMAGE_NAME="flask"
-          sed -i "s|bryamx26/$IMAGE_NAME:latest|bryamx26/$IMAGE_NAME:${GITHUB_SHA}|g" deployment/deploy.yml    
-      - name : commit changes
+          sed -i "s|bryamx26/$IMAGE_NAME:latest|bryamx26/$IMAGE_NAME:${{ needs.checkout.outputs.sha }}|g" deployment/deploy.yml
+
+      - name: Commit changes
         run: |
           git config --global user.name "bryamx26"
-          git config --global user.email "rishingsilvabryam@github.com"    
+          git config --global user.email "rishingsilvabryam@github.com"
           git add deployment/deploy.yml
-          git commit -m "Update image tag to ${GITHUB_SHA} in deployment file"
+          git commit -m "Update image tag to ${{ needs.checkout.outputs.sha }} in deployment file"
           git push origin HEAD:main
