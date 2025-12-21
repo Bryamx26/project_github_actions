@@ -41,7 +41,7 @@ jobs:
           IMAGE_NAME="flask"
           sed -i "s|bryamx26/$IMAGE_NAME:.*|bryamx26/$IMAGE_NAME:${GITHUB_SHA}|g" deployment/deploy.yml
 
-      - name: Commit changes if any
+      - name: Commit changes
         run: |
           git config --global user.name "bryamx26"
           git config --global user.email "rishingsilvabryam@github.com"
@@ -50,4 +50,5 @@ jobs:
             git commit -m "Update image tag to ${GITHUB_SHA} in deployment file"
             git push origin HEAD:main
           else
-            echo "No changes to commit"
+            echo "No changes to commit, stopping workflow."
+
