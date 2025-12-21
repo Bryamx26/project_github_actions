@@ -33,7 +33,6 @@ jobs:
           tags: |
             bryamx26/flask:latest
             bryamx26/flask:${{ github.sha }}
-          # Le cache permet d'accélérer les builds suivants
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -43,17 +42,32 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Update Kubernetes YAML
-        uses: fjogeleit/yaml-update-action@main
         with:
-          valueFile: 'deployment/deploy.yml'
-          # Le chemin précis basé sur votre fichier :
-          propertyPath: 'spec.template.spec.containers[0].image'
-          value: bryamx26/flask:${{ github.sha }}
-          commitChange: true
-          branch: main
-          # Important si vous avez plusieurs documents (---) dans le fichier
-          updateFile: true 
-          message: "🚀 Deploy: update image tag to ${{ github.sha }}"
-          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Update image tag with sed
+        run: |
+          IMAGE_NAME="bryamx26/flask"
+          NEW_TAG="${{ github.sha }}"
+          FILE="deployment/deploy.yml"
+          
+          # Utilisation de sed pour modifier la ligne de l'image
+          sed -i "s|image: $IMAGE_NAME:.*|image: $IMAGE_NAME:$NEW_TAG|g" "$FILE"
+          
+          echo "Vérification après modification :"
+          grep "image: $IMAGE_NAME" "$FILE"
+
+      - name: Commit and Push changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git add deployment/deploy.yml
+          
+          # Commit seulement s'il y a une différence réelle
+          if git diff --cached --quiet; then
+            echo "Rien à mettre à jour."
+          else
+            git commit -m "🚀 Deploy: update image tag to ${{ github.sha }}"
+            git push origin main
+          fi
