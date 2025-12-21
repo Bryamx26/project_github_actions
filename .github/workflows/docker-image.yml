@@ -13,8 +13,20 @@ jobs:
   build_and_push:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Configure git
+        run: |
+          git config --global user.name "bryamx26"
+          git config --global user.email "rishingsilvabryam@github.com"
+
+      - name: Pull repository manually
+        run: |
+          # Si le dossier n'existe pas, on clone
+          if [ ! -d "./project_github_actions" ]; then
+            git clone https://github.com/Bryamx26/project_github_actions.git
+          fi
+          cd project_github_actions
+          git checkout main
+          git pull origin main
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
@@ -24,12 +36,14 @@ jobs:
 
       - name: Build Docker image
         run: |
+          cd project_github_actions
           IMAGE_NAME="flask"
           docker build -t bryamx26/$IMAGE_NAME:latest \
                        -t bryamx26/$IMAGE_NAME:${GITHUB_SHA} .
 
       - name: Push Docker image
         run: |
+          cd project_github_actions
           IMAGE_NAME="flask"
           docker push bryamx26/$IMAGE_NAME:latest
           docker push bryamx26/$IMAGE_NAME:${GITHUB_SHA}
@@ -38,26 +52,35 @@ jobs:
     runs-on: ubuntu-latest
     needs: build_and_push
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Configure git
+        run: |
+          git config --global user.name "bryamx26"
+          git config --global user.email "rishingsilvabryam@github.com"
+
+      - name: Pull latest changes
+        run: |
+          if [ ! -d "./project_github_actions" ]; then
+            git clone https://github.com/Bryamx26/project_github_actions.git
+          fi
+          cd project_github_actions
+          git checkout main
+          git pull origin main
 
       - name: Replace image tag in deployment file
         run: |
+          cd project_github_actions
           IMAGE_NAME="flask"
           FILE="deployment/deploy.yml"
           NEW_TAG="${GITHUB_SHA}"
-          # Remplace n'importe quel tag existant
           sed -i "s|bryamx26/$IMAGE_NAME:.*|bryamx26/$IMAGE_NAME:$NEW_TAG|g" "$FILE"
           echo "Deployment file updated with new image tag."
 
       - name: Commit changes if there are modifications
         run: |
-          git config --global user.name "bryamx26"
-          git config --global user.email "rishingsilvabryam@github.com"
+          cd project_github_actions
           git add deployment/deploy.yml
           if ! git diff --cached --quiet; then
             git commit -m "Update image tag to ${GITHUB_SHA} in deployment file"
             git push origin HEAD:main
           else
             echo "No changes to commit, stopping workflow."
-          fi
