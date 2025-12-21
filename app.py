@@ -31,6 +31,8 @@ def argocd():
             padding: 20px;
         }
 
+                                  
+                                  
         .container {
             max-width: 900px;
             margin: 0 auto;
